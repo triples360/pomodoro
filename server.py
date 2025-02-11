@@ -86,3 +86,8 @@ def get_audio():
 @app.get("/v1/focus_duration")
 def focus_duration():
     return { "value": (pomodoro_timer.focus_duration // 60) }
+
+
+@app.get("/favicon.ico")
+def logo():
+    return FileResponse("resources/logo.jpg")
