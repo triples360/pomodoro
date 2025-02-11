@@ -7,6 +7,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import threading
 import asyncio
+from db import db
+
+DB = db.connect()
 
 app = FastAPI()
 
@@ -22,30 +25,33 @@ async def get_index():
 
 # Timer state
 class PomodoroTimer:
-    def __init__(self):
+    def __init__(self, focus_duration=0):
         self.start_time = 0
         self.end_time = 0
         self.is_running = False
-        self.duration = 0
+        self.focus_duration = focus_duration
 
-    def start(self, duration_minutes: int):
+    def start(self, duration_minutes: int=None):
         self.start_time = time.time()
-        self.duration = duration_minutes * 60  # convert to seconds
-        self.duration = 2
-        self.end_time = self.start_time + self.duration
+        if(duration_minutes):
+            self.focus_duration = duration_minutes * 60  # convert to seconds
+        self.end_time = self.start_time + self.focus_duration
         self.is_running = True
+        return self.focus_duration
 
     def stop(self):
         self.is_running = False
 
     def get_remaining_time(self):
         if self.is_running:
-            print(f"HELLO!!! {self.end_time - time.time()}")
             return max(0, self.end_time - time.time())
         return 0
 
 # Initialize Pomodoro timer
-pomodoro_timer = PomodoroTimer()
+curr = DB.cursor()
+curr.execute("SELECT focus_duration FROM users WHERE id = 1")
+user_focus_duration = curr.fetchone()[0]
+pomodoro_timer = PomodoroTimer(user_focus_duration)
 
 # WebSocket for real-time updates
 @app.websocket("/ws/timer")
@@ -62,9 +68,9 @@ async def websocket_timer(websocket: WebSocket):
                 pomodoro_timer.stop()
         await asyncio.sleep(1)
 
-@app.get("/start_timer/{duration}")
-async def start_timer(duration: int):
-    pomodoro_timer.start(duration)
+@app.get("/start_timer")
+async def start_timer():
+    duration = pomodoro_timer.start()
     return {"status": "Pomodoro started", "duration": duration}
 
 @app.get("/stop_timer")
@@ -75,3 +81,8 @@ async def stop_timer():
 @app.get("/v1/resources/finish_audio/user")
 def get_audio():
     return FileResponse("resources/avicii_levels.mp3", media_type="audio/mpeg")
+
+
+@app.get("/v1/focus_duration")
+def focus_duration():
+    return { "value": (pomodoro_timer.focus_duration // 60) }
