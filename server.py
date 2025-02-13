@@ -7,9 +7,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import threading
 import asyncio
-from db import db
 
-DB = db.connect()
+from db.models import User, engine
+from sqlalchemy.orm import sessionmaker
+
+Session = sessionmaker(bind=engine)
+session = Session()
 
 app = FastAPI()
 
@@ -48,10 +51,8 @@ class PomodoroTimer:
         return 0
 
 # Initialize Pomodoro timer
-curr = DB.cursor()
-curr.execute("SELECT focus_duration FROM users WHERE id = 1")
-user_focus_duration = curr.fetchone()[0]
-pomodoro_timer = PomodoroTimer(user_focus_duration)
+user = session.query(User).where(User.id == 1).first()
+pomodoro_timer = PomodoroTimer(user.focus_duration)
 
 # WebSocket for real-time updates
 @app.websocket("/ws/timer")
