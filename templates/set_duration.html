@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number API Caller</title>
+</head>
+<body>
+    <h2>Enter a Number</h2>
+    <input type="number" id="numberInput" placeholder="Enter a number">
+    <button onclick="sendNumber()">Submit</button>
+    <p id="response"></p>
+    <button onclick="window.location.href='/templates/index.html'">Go back to Pomodoro</button>
+
+    <script>
+        async function sendNumber() {
+            const number = document.getElementById('numberInput').value;
+            if (!number) {
+                alert("Please enter a number");
+                return;
+            }
+
+            try {
+                const response = await fetch('/v1/set/focus_duration', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ number: Number(number) })
+                });
+                
+                const data = await response.json();
+                document.getElementById('response').innerText = 'Response: ' + JSON.stringify(data);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('response').innerText = 'Error occurred';
+            }
+        }
+    </script>
+</body>
+</html>
