@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set focus duration</title>
+</head>
+<body>
+    <h2>Enter a duration (in seconds)</h2>
+    <input type="number" id="numberInput" placeholder="Enter the duration (in seconds)">
+    <button onclick="sendNumber()">Submit</button>
+    <p id="response"></p>
+    <!-- Go to the base page which is where pomodoro timer is hosted -->
+    <button onclick="window.location.href='/'">Go back to Pomodoro</button>
+
+    <script>
+        async function sendNumber() {
+            const number = document.getElementById('numberInput').value;
+            if (!number) {
+                alert("Please enter a number");
+                return;
+            }
+
+            try {
+                const response = await fetch('/v1/set/focus_duration/' + Number(number), {
+                    method: 'POST'//,
+                    // headers: {
+                    //     'Content-Type': 'application/json'
+                    // },
+                    // body: JSON.stringify({ number: Number(number) })
+                });
+                
+                const data = await response.json();
+                document.getElementById('response').innerText = 'Response: ' + JSON.stringify(data);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('response').innerText = 'Error occurred';
+            }
+        }
+    </script>
+</body>
+</html>

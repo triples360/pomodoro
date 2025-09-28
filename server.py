@@ -92,3 +92,17 @@ def focus_duration():
 @app.get("/favicon.ico")
 def logo():
     return FileResponse("resources/logo.jpg")
+
+
+@app.get("/templates/{page_name}")
+def set_duration_page(page_name):
+    return FileResponse(f"templates/{page_name}")
+
+
+@app.post("/v1/set/focus_duration/{duration}")
+async def set_focus_duration(duration):
+    print(duration)
+    user.focus_duration = duration
+    session.commit()
+    pomodoro_timer.focus_duration = user.focus_duration
+    return {"status": "success", "message": f"user with user_id = {user.id}'s focus_duration updated to {user.focus_duration}"}
